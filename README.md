@@ -1,2 +1,2 @@
 # fetch
-A relatively fast CLI downloader
+A conveniently fast downloader in command-line
