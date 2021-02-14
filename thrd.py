@@ -66,10 +66,9 @@ class Textface:
             click.style(precursr, fg="blue", bold=True) + " " + \
             click.style(textmesg)
 
-    def specmesg(self, precursr, textmesg):
+    def specmesg(self, precursr):
         return \
-            click.style(precursr, fg="magenta", bold=True) + " " + \
-            click.style(textmesg)
+            click.style(precursr, fg="magenta", bold=True)
 
     def genrmesg(self, precursr, textmesg):
         return \
@@ -123,6 +122,8 @@ class Singload:
             progelem = tqdm(
                 self.rqstobjc.stream(self.strmsize),
                 desc=click.style("STARTING", fg="yellow", bold=True),
+                colour="#008080",
+                total=int(self.filesize),
                 leave=False
             )
             for filepeic in progelem:
@@ -130,16 +131,16 @@ class Singload:
                 progelem.set_description(
                     Textface().specmesg(
                         "RECEIVED",
-                        click.style(str(len(self.respdata)) + "/" + str(self.filesize) + "B")
                     )
                 )
+                progelem.update(len(filepeic))
             progelem.close()
             stoptime = time()
             duration = str(stoptime - strttime)
             self.duraform = duration.split(".")[0] + "." + duration.split(".")[1][0:2]
             self.savefile()
         except Exception as expt:
-            Textface().failmesg("FAILURE", str(expt))
+            click.echo(Textface().failmesg("COLLAPSE", str(expt)))
             exit()
 
     def savefile(self):
@@ -161,7 +162,7 @@ class Singload:
             self.rqstobjc.release_conn()
             exit()
         except Exception as expt:
-            Textface().failmesg("FAILURE", str(expt))
+            click.echo(Textface().failmesg("COLLAPSE", str(expt)))
             exit()
 
 
@@ -228,6 +229,8 @@ class Multload:
             progelem = tqdm(
                 thrdrqst.stream(self.strmsize),
                 desc=click.style("STARTING", fg="yellow", bold=True),
+                colour="#008080",
+                total=partsize,
                 leave=False
             )
             partresp = b""
@@ -235,15 +238,15 @@ class Multload:
                 partresp += filepeic
                 progelem.set_description(
                     Textface().specmesg(
-                        "RECEIVED",
-                        click.style("T#" + str(qantindx) + " " + str(len(partresp)) + "/" + str(partsize) + "B")
+                        "RECEIVED"
                     )
                 )
+                progelem.update(len(filepeic))
             progelem.close()
             thrdrqst.release_conn()
             self.buffdict[qantindx] = partresp
         except Exception as expt:
-            Textface().failmesg("FAILURE", str(expt))
+            click.echo(Textface().failmesg("COLLAPSE", str(expt)))
             exit()
 
     def calcptsz(self, fullsize, thrdqant):
@@ -295,7 +298,7 @@ class Multload:
             click.echo(
                 Textface().genrmesg(
                     "MIMETYPE",
-                    click.style(from_buffer(filebuff) + " " + "(" + from_buffer(filebuff, mime=True) + ") (" + str(len(filebuff)) + "B)")
+                    click.style(from_buffer(filebuff) + " " + "(" + from_buffer(filebuff, mime=True) + ")")
                 )
             )
             click.echo(
@@ -313,7 +316,7 @@ class Multload:
 @click.command()
 @click.option("-l", "--fileloca", "fileloca", help="Set the remote file location.", required=True)
 @click.option("-s", "--strmsize", "strmsize", help="Set the stream size in bytes.", required=True, default=65536)
-@click.option("-t", "--thrdqant", "thrdqant", help="Set the number of threads.", required=True, default=1)
+@click.option("-t", "--thrdqant", "thrdqant", help="Set the number of threads. [1-512]", required=True, default=1)
 @click.version_option(version="0.2.0-alpha", prog_name=click.style("Fetch", fg="magenta", bold=True))
 def mainfunc(fileloca, strmsize, thrdqant):
     """
@@ -323,14 +326,17 @@ def mainfunc(fileloca, strmsize, thrdqant):
         if strmsize >= 1:
             if thrdqant == 1:
                 downobjc = Singload(fileloca, strmsize)
-            elif thrdqant > 1:
+            elif 512 >= thrdqant > 1:
                 downobjc = Multload(fileloca, strmsize, thrdqant)
             else:
-                click.echo(Textface().failmesg("COLLAPSE", "Invalid thread count entered"))
+                click.echo(Textface().failmesg("COLLAPSE", "Thread count should be in the range of 1 to 512"))
+                exit()
         else:
             click.echo(Textface().failmesg("COLLAPSE", "Invalid stream size entered"))
+            exit()
     except Exception as expt:
-        click.echo(Textface().failmesg("FAILURE", str(expt)))
+        click.echo(Textface().failmesg("COLLAPSE", str(expt)))
+        exit()
 
 
 if __name__ == "__main__":
