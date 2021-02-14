@@ -27,6 +27,8 @@ from tqdm import tqdm
 from magic import from_buffer
 from sys import exit
 from os.path import basename
+from hashlib import sha256
+
 
 """
 Notification Slugs
@@ -153,7 +155,7 @@ class Singload:
             click.echo(
                 Textface().succmesg(
                     "COMPLETE",
-                    click.style("Transferred in " + str(self.duraform) + " seconds")
+                    click.style(sha256(self.respdata).hexdigest() + " (" + str(self.duraform) + " secs)")
                 )
             )
             self.rqstobjc.release_conn()
@@ -238,6 +240,7 @@ class Multload:
                     )
                 )
             progelem.close()
+            thrdrqst.release_conn()
             self.buffdict[qantindx] = partresp
         except Exception as expt:
             Textface().failmesg("FAILURE", str(expt))
@@ -255,7 +258,10 @@ class Multload:
         for indx in range(0, thrdqant+1, 1):
             partindx.append(sum(sizelist[0:indx]))
         for indx in range(1, len(partindx), 1):
-            chekpnts.append((partindx[indx-1], partindx[indx]))
+            if indx == 1:
+                chekpnts.append((partindx[indx - 1], partindx[indx]))
+            else:
+                chekpnts.append((partindx[indx - 1] + 1, partindx[indx]))
         return chekpnts
 
     def begindld(self):
@@ -281,7 +287,7 @@ class Multload:
     def savefile(self):
         try:
             filebuff = b""
-            for indx in self.buffdict.keys():
+            for indx in sorted(self.buffdict.keys()):
                 filebuff += self.buffdict[indx]
             with open(self.filename, "wb") as fileobjc:
                 fileobjc.write(filebuff)
@@ -289,16 +295,15 @@ class Multload:
             click.echo(
                 Textface().genrmesg(
                     "MIMETYPE",
-                    click.style(from_buffer(filebuff) + " " + "(" + from_buffer(filebuff, mime=True) + ")")
+                    click.style(from_buffer(filebuff) + " " + "(" + from_buffer(filebuff, mime=True) + ") (" + str(len(filebuff)) + "B)")
                 )
             )
             click.echo(
                 Textface().succmesg(
                     "COMPLETE",
-                    click.style("Transferred in " + str(self.duraform) + " seconds")
+                    click.style(sha256(filebuff).hexdigest() + " (" + str(self.duraform) + " secs)")
                 )
             )
-            self.rqstobjc.release_conn()
             exit()
         except Exception as expt:
             click.echo(Textface().failmesg("COLLAPSE", str(expt)))
