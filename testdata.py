@@ -265,10 +265,11 @@ def mainfunc(strmsize):
     [65536, 131072, 196608, 262144, 327680, 393216, 458752, 524288, 589824, 655360, 720896, 786432, 851968, 917504, 983040, 1048576, 1114112, 1179648, 1245184, 1310720, 1376256, 1441792, 1507328, 1572864, 1638400, 1703936, 1769472, 1835008, 1900544, 1966080, 2031616, 2097152]
     SCHEMA {strmsize}.csv > {thrdqant}, {duration}, {sha256hx}
     """
+    strmsize = int(strmsize)
     fileloca = "https://speed.hetzner.de/100MB.bin"
-    with open(str(strmsize)+".csv", "w") as fileobjc:
-        fileobjc.write("")
-    for thrdqant in range(1, 513, 1):
+    #with open(str(strmsize)+".csv", "w") as fileobjc:
+        #fileobjc.write("")
+    for thrdqant in range(246, 513, 1):
         if thrdqant == 1:
             downobjc = Singload(fileloca, strmsize)
         elif 512 >= thrdqant > 1:

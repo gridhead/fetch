@@ -33,12 +33,9 @@ from hashlib import sha256
 """
 Notification Slugs
 
-WARNING
-FAILURE
-SUCCESS
-DETAILS
 PROPERTY
 RECEIVED
+ACQUIRED
 PATIENCE
 COMPLETE
 STARTING
@@ -217,8 +214,17 @@ class Multload:
             click.echo(Textface().failmesg("COLLAPSE", str(expt)))
             exit()
 
+    def frmtqant(self, thrdindx):
+        if thrdindx in range(0, 10):
+            return "00" + str(thrdindx)
+        elif thrdindx in range(10, 100):
+            return "0" + str(thrdindx)
+        elif thrdindx in range(100, 1000):
+            return str(thrdindx)
+
     def thrdpull(self, qantindx, byternge):
         try:
+            thrdhead = "PART#" + self.frmtqant(qantindx)
             partsize = byternge[1] - byternge[0]
             thrdrqst = self.httpobjc.request(
                 "GET",
@@ -238,7 +244,7 @@ class Multload:
                 partresp += filepeic
                 progelem.set_description(
                     Textface().specmesg(
-                        "RECEIVED"
+                        thrdhead
                     )
                 )
                 progelem.update(len(filepeic))
