@@ -19,15 +19,16 @@
 ##########################################################################
 """
 
-from urllib3 import PoolManager
-import click
 import threading
-from time import time
-from tqdm import tqdm
-from magic import from_buffer
-from sys import exit
-from os.path import basename
 from hashlib import sha256
+from os.path import basename
+from sys import exit
+from time import time
+
+import click
+from magic import from_buffer
+from tqdm import tqdm
+from urllib3 import PoolManager
 
 
 """
